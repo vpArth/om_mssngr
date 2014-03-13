@@ -1,0 +1,34 @@
+parameters:
+#    alawar_f2_p_admin.example.class: Alawar\F2P\AdminBundle\Example
+    secretKey: %secret%
+    needSign: 0
+    responseFormat: json # only "json" value available yet
+    log.message:
+        maxLength: 30
+        trimLength: 25
+services:
+    #signed requests and response, rely on needSign parameter
+    omapi.tokens.action_listener:
+        class: OM\APIBundle\EventListener\SignHandler
+        arguments: ["%secretKey%", "%needSign%"]
+        tags:
+            - { name: kernel.event_listener, event: kernel.controller, method: onKernelController }
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+    #finish trigger: used for logs
+    omapi.finish.action_listener:
+        class: OM\APIBundle\EventListener\FinishListener
+        arguments: [ @logger, "%log.message%" ]
+        tags:
+            - { name: kernel.event_listener, event: kernel.terminate, method: onFinish }
+    #response format selecting, now relied on responseFormat parameter
+    omapi.responseformat.action_listener:
+        class: OM\APIBundle\EventListener\ResponseFormat
+        arguments: [ %responseFormat% ]
+        tags:
+            - { name: kernel.event_listener, event: kernel.view, method: onResponse }
+    #errors handling: used both for exceptions catching and API errors processing
+    omapi.exception.action_listener:
+        class: OM\APIBundle\EventListener\ExceptionListener
+        arguments: [ @logger ]
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onException }

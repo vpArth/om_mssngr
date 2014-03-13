@@ -1,0 +1,3 @@
+omapi_homepage:
+    pattern:  /ok
+    defaults: { _controller: OMAPIBundle:Auth:ok }

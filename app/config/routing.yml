@@ -1,0 +1,4 @@
+omapi:
+    resource: "@OMAPIBundle/Resources/config/routing.yml"
+    prefix:   /api/
+
