@@ -24,7 +24,7 @@ class ExceptionListener
         $exception = $event->getException();
         $message = json_encode(
             array(
-                'status' => $exception->getCode(),
+                'status' => $exception->getCode() ?: -1,
                 'message' => $exception->getMessage(),
                 'timestamp' => time()
             )
