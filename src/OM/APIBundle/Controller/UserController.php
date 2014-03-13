@@ -4,8 +4,9 @@ namespace OM\APIBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
-class DefaultController extends Controller
+class UserController implements ISignedController
 {
     public function okAction(Request $req)
     {

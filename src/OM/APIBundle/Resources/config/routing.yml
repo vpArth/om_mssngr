@@ -1,3 +1,38 @@
 omapi_homepage:
     pattern:  /ok
+    defaults: { _controller: OMAPIBundle:Default:ok }
+
+omapi_auth_register:
+    pattern:  /register
     defaults: { _controller: OMAPIBundle:Auth:ok }
+    methods: [ GET ]
+
+omapi_auth_login:
+    pattern:  /login
+    defaults: { _controller: OMAPIBundle:Auth:ok }
+    methods: [ GET ]
+
+omapi_user_list:
+    pattern:  /users
+    defaults: { _controller: OMAPIBundle:User:ok }
+    methods: [ GET ]
+
+omapi_user_profile:
+    pattern:  /user/{id}
+    defaults: { _controller: OMAPIBundle:User:ok }
+    methods: [ GET ]
+    requirements:
+      id: \d+
+
+omapi_user_options:
+    pattern:  /user/options
+    defaults: { _controller: OMAPIBundle:User:ok }
+    methods: [ GET ]
+    requirements:
+      id: \d+
+
+omapi_user_options_modify:
+    pattern:  /user/options
+    defaults: { _controller: OMAPIBundle:User:ok }
+    methods: [ PUT ]
+
