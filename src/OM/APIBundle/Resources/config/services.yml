@@ -6,6 +6,9 @@ parameters:
     log.message:
         maxLength: 30
         trimLength: 25
+    memcached.servers:
+      - { host: 127.0.0.1, port: 11211 }
+
 services:
     #signed requests and response, rely on needSign parameter
     omapi.tokens.action_listener:
@@ -32,3 +35,7 @@ services:
         arguments: [ @logger ]
         tags:
             - { name: kernel.event_listener, event: kernel.exception, method: onException }
+    memcached:
+        class: Doctrine\Common\Cache\MemcacheCache
+        calls:
+            - [ addServers, [ %memcached.servers% ]]

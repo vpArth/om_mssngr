@@ -15,8 +15,10 @@ class Request extends R
         /** @var Request $request */
         $request = parent::createFromGlobals();
 
-        if (0 === strpos($request->headers->get('CONTENT_TYPE'), 'application/json')) {
-            $data = json_decode($request->getContent(), true);
+        if (0 === strpos($request->headers->get('CONTENT_TYPE'), 'application/json')
+            && ($data = $request->getContent())
+        ) {
+            $data = json_decode($data, true);
             $request->request = new ParameterBag($data);
         }
         $params = array_merge(

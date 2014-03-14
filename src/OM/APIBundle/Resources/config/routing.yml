@@ -1,6 +1,6 @@
-omapi_homepage:
+omapi_apiok:
     pattern:  /ok
-    defaults: { _controller: OMAPIBundle:Default:ok }
+    defaults: { _controller: OMAPIBundle:Auth:ok }
 
 omapi_auth_register:
     pattern:  /register
@@ -9,7 +9,7 @@ omapi_auth_register:
 
 omapi_auth_login:
     pattern:  /login
-    defaults: { _controller: OMAPIBundle:Auth:ok }
+    defaults: { _controller: OMAPIBundle:Auth:login }
     methods: [ GET ]
 
 omapi_user_list:

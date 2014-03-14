@@ -1,5 +1,11 @@
 imports:
     - { resource: security.yml }
 
-parameters:
-  test: 1
+aequasi_cache:
+    instances:
+        default:
+          persistent: true
+          namespace: mc
+          type: memcached
+          hosts:
+              - { host: localhost, port: 11211 }
