@@ -19,7 +19,11 @@ class Request extends R
             && ($data = $request->getContent())
         ) {
             $data = json_decode($data, true);
-            $request->request = new ParameterBag($data);
+            if ($data) {
+                $request->request = new ParameterBag($data);
+            } else {
+                throw new \Exception("Malformed JSON", 500);
+            }
         }
         $params = array_merge(
             $request->request->all(),

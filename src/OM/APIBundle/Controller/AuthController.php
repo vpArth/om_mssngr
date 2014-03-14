@@ -145,6 +145,7 @@ class AuthController extends Controller implements ISignedController
     public function profileAction(Request $req, $id)
     {
         $user = AuthController::authorize($req, $this);
+        /** @var UserRepository $repo */
         $repo = $this->getDoctrine()->getRepository('OMAPIBundle:User');
         $profile = $repo->getProfile($id, array(
             'self' => $user,
@@ -154,5 +155,41 @@ class AuthController extends Controller implements ISignedController
             throw new \Exception("Requested user inactive or not exists", self::USER_NOT_FOUND);
         }
         return $profile;
+    }
+
+    public function updateAction(Request $req)
+    {
+        $user = AuthController::authorize($req, $this);
+        $isUpdate = false;
+        if ($req->params->has('username')) {
+            $username = $req->params->get('username');
+            $isUpdate |= ($username != $user->getUsername());
+            $user->setUsername($username);
+        }
+        if ($req->params->has('email')) {
+            $email = $req->params->get('email');
+            $isUpdate |= $email != $user->getEmail();
+            $user->setUsername($email);
+        }
+        if ($req->params->has('password')) {
+            $isUpdate = true;
+            /** @var EncoderFactoryInterface $factory */
+            $factory = $this->get('security.encoder_factory');
+            $encoder = $factory->getEncoder($user);
+            $user->setPassword($encoder->encodePassword($req->params->get('password'), $user->getSalt()));
+        }
+        if ($isUpdate) {
+            $val = new Validation($this->get('validator'));
+            $errors = $val->checkUniques($user, array('username', 'email'));
+            if ($errors) {
+                throw new \Exception($errors, Validation::UNIQUE_FAILED);
+            }
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($user);
+            $em->flush();
+            return "User updated successfully";
+        }
+        return "Nothing updated";
     }
 }

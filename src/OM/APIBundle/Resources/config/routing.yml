@@ -24,15 +24,8 @@ omapi_user_profile:
     requirements:
       id: \d+
 
-omapi_user_options:
-    pattern:  /user/options
-    defaults: { _controller: OMAPIBundle:User:ok }
-    methods: [ GET ]
-    requirements:
-      id: \d+
-
 omapi_user_options_modify:
-    pattern:  /user/options
-    defaults: { _controller: OMAPIBundle:User:ok }
+    pattern:  /user
+    defaults: { _controller: OMAPIBundle:Auth:update }
     methods: [ PUT ]
 
