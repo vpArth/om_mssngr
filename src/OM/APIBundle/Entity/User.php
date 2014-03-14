@@ -1,15 +1,15 @@
 <?php
 
-namespace OM\Server\UserBundle\Entity;
+namespace OM\APIBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * OM\Server\UserBundle\Entity\User
+ * OM\APIBundle\Entity\User
  *
  * @ORM\Table(name="users")
- * @ORM\Entity(repositoryClass="OM\Server\UserBundle\Entity\UserRepository")
+ * @ORM\Entity(repositoryClass="OM\APIBundle\Entity\UserRepository")
  */
 class User implements UserInterface, \Serializable
 {
@@ -29,6 +29,10 @@ class User implements UserInterface, \Serializable
      * @ORM\Column(type="string", length=64)
      */
     private $password;
+    /**
+     * @ORM\Column(type="string", length=64)
+     */
+    private $salt;
 
     /**
      * @ORM\Column(type="string", length=60, unique=true)
@@ -48,7 +52,7 @@ class User implements UserInterface, \Serializable
     public function __construct()
     {
         $this->isActive = true;
-        $this->salt = md5(uniqid(null, true));
+        $this->salt = "";//md5(uniqid(null, true));
     }
 
     /**
@@ -219,5 +223,41 @@ class User implements UserInterface, \Serializable
     public function getLastLogin()
     {
         return $this->lastLogin;
+    }
+
+    /**
+     * Set salt
+     *
+     * @param string $salt
+     * @return User
+     */
+    public function setSalt($salt)
+    {
+        $this->salt = $salt;
+
+        return $this;
+    }
+
+    public function setValues($values)
+    {
+        foreach ($values as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
+        return $this;
+    }
+
+    public function getValues()
+    {
+        return array(
+            'id' => $this->getId(),
+            'username' => $this->getUsername(),
+            'email' => $this->getEmail(),
+            'password' => $this->getPassword(),
+            'salt' => $this->getSalt(),
+            'lastLogin' => $this->getLastLogin(),
+            'isActive' => $this->getisActive()
+        );
     }
 }

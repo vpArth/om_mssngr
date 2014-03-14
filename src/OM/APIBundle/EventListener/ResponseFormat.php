@@ -35,11 +35,13 @@ class ResponseFormat
 
     public function onResponse(GetResponseForControllerResultEvent $event)
     {
+        $request = $event->getRequest();
         $result = $event->getControllerResult();
         $content = array();
         $content['result'] = $result;
         $content['status'] = self::STATUS_SUCCESS;
-        $content['timestamp'] = time();
+        // $content['timestamp'] = time();
+        $content['time'] = microtime(1) - $request->startTime;
         $event->setResponse($this->format($content));
     }
 }

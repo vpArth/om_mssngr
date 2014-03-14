@@ -22,11 +22,16 @@ class ExceptionListener
     public function onException(GetResponseForExceptionEvent $event)
     {
         $exception = $event->getException();
+        if (!$exception->getCode()) {
+            throw $exception;
+        }
+        $request = $event->getRequest();
         $message = json_encode(
             array(
                 'status' => $exception->getCode() ?: -1,
                 'message' => $exception->getMessage(),
-                'timestamp' => time()
+                // 'timestamp' => time(),
+                'time' => microtime(1) - $request->startTime
             )
         );
 

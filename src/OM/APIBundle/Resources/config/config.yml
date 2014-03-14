@@ -1,0 +1,5 @@
+imports:
+    - { resource: security.yml }
+
+parameters:
+  test: 1

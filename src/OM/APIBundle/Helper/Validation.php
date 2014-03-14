@@ -2,16 +2,19 @@
 
 namespace OM\APIBundle\Helper;
 
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Validator;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\ConstraintViolationInterface;
-
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntityValidator;
 class Validation
 {
+    const INVALID_PARAMS = 22004;
+    const UNIQUE_FAILED  = 22005;
+
     private $validator;
 
     public function __construct($validator)
@@ -22,14 +25,6 @@ class Validation
         $this->validator = $validator;
     }
 
-    private function getParam(Request $req, $field, $default = null)
-    {
-        $content = $req->getContent();
-        $params = empty($content) ? array() : json_decode($content, true);
-        $param = isset($params[$field]) ? $params[$field] : $default;
-        return $req->get($field, $param);
-    }
-
     private function checkConstraint(
         Request $req,
         array $fields,
@@ -37,7 +32,7 @@ class Validation
         $msg = 'Field {{field}} is invalid'
     ) {
         foreach ($fields as $field) {
-            $value = $this->getParam($req, $field);
+            $value = $req->params->get($field);
             $constraint->message = str_replace("{{field}}", $field, $msg);
             /** @var $errorList ConstraintViolationList */
             $errorList = $this->validator->validateValue(
@@ -73,6 +68,28 @@ class Validation
         );
     }
 
+    public function checkUniques($entity, array $fieldsets)
+    {
+        foreach ($fieldsets as $fieldset) {
+            $constraint = new UniqueEntity(array('fields'=>$fieldset));
+            if (!is_array($fieldset)) {
+                $fieldset = array($fieldset);
+            }
+            $constraint->message = "This ".implode(', ', $fieldset). " already used";
+            /** @var $errorList ConstraintViolationList */
+            $errorList = $this->validator->validateValue(
+                $entity,
+                $constraint
+            );
+            if (count($errorList) != 0) {
+                /** @var $error ConstraintViolationInterface*/
+                $error = $errorList[0];
+                return $error->getMessage();
+            }
+        }
+        return 0;
+    }
+
     public function validate(Request $req, array $rules)
     {
         foreach ($rules as $rule => $fields) {
@@ -87,6 +104,7 @@ class Validation
                         return $res;
                     }
                     break;
+
                 default:
                     throw new \Exception("Unknown validation rule: $rule", 0xDEADBEEF);
             }

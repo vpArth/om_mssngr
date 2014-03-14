@@ -3,7 +3,7 @@
 namespace OM\APIBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
+use OM\APIBundle\Helper\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserController implements ISignedController

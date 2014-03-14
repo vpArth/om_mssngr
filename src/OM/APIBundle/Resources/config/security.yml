@@ -1,0 +1,5 @@
+security:
+    encoders:
+        OM\APIBundle\Entity\User:
+            algorithm: bcrypt
+            cost: 12

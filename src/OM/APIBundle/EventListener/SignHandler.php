@@ -49,6 +49,12 @@ class SignHandler
         ($this->hash = $this->requestHash($request->query->all()));
     }
 
+    private function markStart(FilterControllerEvent $event)
+    {
+        $request = $event->getRequest();
+        $request->startTime = microtime(1);
+    }
+
     private function isBadRequest(FilterControllerEvent $event)
     {
         return 0;
@@ -61,6 +67,7 @@ class SignHandler
         if (!is_array($controller)) {
             return;
         }
+        $this->markStart($event);
         if ($this->needSign && $controller[0] instanceof Controller\ISignedController) {
             if (!$this->requestSigned($event)) {
                 throw new AccessDeniedHttpException('This action needs a valid sign!');
@@ -74,11 +81,12 @@ class SignHandler
 
     public function onKernelResponse(FilterResponseEvent $event)
     {
+        $request = $event->getRequest();
+        $response = $event->getResponse();
         if (!$event->getRequest()->attributes->get('signed')) {
             return;
         }
 
-        $response = $event->getResponse();
         $response->headers->set('X-Content-DSA', $this->responseHash($response->getContent()));
     }
 }
