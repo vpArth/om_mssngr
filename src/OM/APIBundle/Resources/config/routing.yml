@@ -14,12 +14,12 @@ omapi_auth_login:
 
 omapi_user_list:
     pattern:  /users
-    defaults: { _controller: OMAPIBundle:User:ok }
+    defaults: { _controller: OMAPIBundle:Auth:userList }
     methods: [ GET ]
 
 omapi_user_profile:
     pattern:  /user/{id}
-    defaults: { _controller: OMAPIBundle:User:ok }
+    defaults: { _controller: OMAPIBundle:Auth:profile }
     methods: [ GET ]
     requirements:
       id: \d+

@@ -9,3 +9,9 @@ aequasi_cache:
           type: memcached
           hosts:
               - { host: localhost, port: 11211 }
+
+doctrine:
+    orm:
+        dql:
+            datetime_functions:
+                unix_timestamp: OM\APIBundle\Helper\DQL\UnixTimestamp

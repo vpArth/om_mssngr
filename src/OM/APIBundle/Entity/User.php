@@ -45,7 +45,7 @@ class User implements UserInterface, \Serializable
     private $isActive;
 
     /**
-     * @ORM\Column(name="last_login", type="datetime", nullable=true)
+     * @ORM\Column(name="last_login", type="integer", nullable=true)
      */
     private $lastLogin = null;
 
@@ -205,7 +205,7 @@ class User implements UserInterface, \Serializable
     /**
      * Set lastLogin
      *
-     * @param \DateTime $lastLogin
+     * @param int $lastLogin
      * @return User
      */
     public function setLastLogin($lastLogin)
@@ -218,7 +218,7 @@ class User implements UserInterface, \Serializable
     /**
      * Get lastLogin
      *
-     * @return \DateTime
+     * @return int
      */
     public function getLastLogin()
     {
