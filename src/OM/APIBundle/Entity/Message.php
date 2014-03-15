@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="messages",indexes={@ORM\Index(name="from_idx", columns={"from_id"}),@ORM\Index(name="to_idx", columns={"to_id"})})
  * @ORM\Entity(repositoryClass="OM\APIBundle\Entity\MessageRepository")
  */
-class Message
+class Message implements \Serializable
 {
     /**
      * @ORM\Column(type="integer")
@@ -198,4 +198,42 @@ class Message
     {
         return $this->to_id;
     }
+
+    /**
+     * @see \Serializable::serialize()
+     */
+    public function serialize()
+    {
+        return serialize($this->getValues());
+    }
+
+    /**
+     * @see \Serializable::unserialize()
+     */
+    public function unserialize($serialized)
+    {
+        $this->setValues(unserialize($serialized));
+    }
+
+    public function setValues($values)
+    {
+        foreach ($values as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
+        return $this;
+    }
+
+    public function getValues()
+    {
+        return array(
+            'id' => $this->id,
+            'from_id' => $this->from_id,
+            'to_id' => $this->to_id,
+            'text' => $this->getText(),
+            'created' => $this->getCreated(),
+        );
+    }
+
 }

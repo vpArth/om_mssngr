@@ -22,9 +22,9 @@ class ExceptionListener
     public function onException(GetResponseForExceptionEvent $event)
     {
         $exception = $event->getException();
-        if (!$exception->getCode()) {
-            throw $exception;
-        }
+//        if (!$exception->getCode()) {
+//            throw $exception;
+//        }
         $request = $event->getRequest();
         $message = json_encode(
             array(
@@ -34,8 +34,6 @@ class ExceptionListener
         );
 
         $response = new Response();
-        $response->setContent($message);
-        $response->headers->set('Content-Type', 'application/json');
 
         if ($exception instanceof HttpExceptionInterface) {
             $response->setStatusCode($exception->getStatusCode());
@@ -44,6 +42,8 @@ class ExceptionListener
             $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+        $response->headers->set('Content-Type', 'application/json');
+        $response->setContent($message);
         $event->setResponse($response);
         $this->logger->error($response->getContent());
     }

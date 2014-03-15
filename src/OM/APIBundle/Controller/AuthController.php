@@ -114,7 +114,7 @@ class AuthController extends Controller implements ISignedController
         );
     }
 
-    public function logoutAction()
+    public function logoutAction(Request $req)
     {
         /** @var UserModelManager $userMM */
         $userMM = $this->get('omapi.user_model_manager');

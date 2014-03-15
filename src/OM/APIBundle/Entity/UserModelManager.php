@@ -18,11 +18,9 @@ class UserModelManager extends BaseModelManager
             $userId = $userId->getId();
         }
 
-        /** @var Cache $cache */
-        $cache = $this->getContainer()->get('aequasi_cache.instance.default');
         /** @var integer $userId */
         $key = "onlineState:" . $userId;
-        $cache->save($key, 1, $period);
+        $this->saveCache($key, 1, $period);
     }
 
     /**
@@ -53,11 +51,9 @@ class UserModelManager extends BaseModelManager
         $this->save($user);
 
         // auth token
-        /** @var Cache $cache */
-        $cache = $this->getContainer()->get('aequasi_cache.instance.default');
         $token = md5(uniqid().microtime(1));
         $key = "authToken:" . $token;
-        $cache->save($key, $user->getId(), 24*3600);
+        $this->saveCache($key, $user->getId(), 24*3600);
         return $token;
     }
 
@@ -67,10 +63,8 @@ class UserModelManager extends BaseModelManager
      */
     public function logout($token)
     {
-        /** @var Cache $cache */
-        $cache = $this->getContainer()->get('aequasi_cache.instance.default');
         $key = "authToken:" . $token;
-        $cache->delete($key);
+        $this->delCache($key);
         return $this;
     }
 

@@ -30,14 +30,15 @@ class MessageModelManager extends BaseModelManager
             default:
                 throw new \Exception('Wrong query type: '.$type);
         }
+        $order = "ORDER BY m.created";
         switch ($params['type']) {
             default:
             case self::WIDGET_ALL:
-                $query = $this->em->createQuery($q);
+                $query = $this->em->createQuery("$q $order");
                 break;
             case self::WIDGET_DIALOG:
-                $q .= "WHERE m.from_id IN (:with) AND m.to_id IN (:with)";
-                $query = $this->em->createQuery($q);
+                $where = "WHERE m.from_id IN (:with) AND m.to_id IN (:with)";
+                $query = $this->em->createQuery("$q $where $order");
                 $query->setParameter('with', $params['with']);
                 break;
         }

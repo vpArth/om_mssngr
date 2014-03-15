@@ -3,16 +3,13 @@
 namespace OM\APIBundle\Controller;
 
 use OM\APIBundle\Entity\MessageModelManager;
+use OM\APIBundle\Entity\UserModelManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 use OM\APIBundle\Helper\Request;
 use OM\APIBundle\Helper\Validation;
 use OM\APIBundle\Entity\User;
 use OM\APIBundle\Entity\Message;
-use OM\APIBundle\Entity\UserRepository;
-use OM\APIBundle\Entity\MessageRepository;
-use Doctrine\ORM\EntityManager;
 
 class MessageController extends Controller implements ISignedController
 {
@@ -26,11 +23,11 @@ class MessageController extends Controller implements ISignedController
     }
     public function listAction(Request $req)
     {
-        /** @var User $user */
-        $user = AuthController::authorize($req, $this);
+        AuthController::authorize($req, $this);
 
         /** @var MessageModelManager $msgMM */
         $msgMM = $this->get('omapi.message_model_manager');
+
         $params = array();
         $params['type'] = $msgMM::WIDGET_ALL;
         $params['fields'] = array('id', 'username', 'lastLogin');
@@ -45,17 +42,21 @@ class MessageController extends Controller implements ISignedController
         }
         return $msgMM->widget($params);
     }
+
     public function dialogAction(Request $req, $with)
     {
         /** @var User $user */
         $user = AuthController::authorize($req, $this);
 
-        /** @var MessageRepository $mrepo */
-        $mrepo = $this->get('doctrine')->getRepository('OMAPIBundle:Message');
+        /** @var MessageModelManager $msgMM */
+        $msgMM = $this->get('omapi.message_model_manager');
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
 
-        $params = array();
-        $params['exclude_id'] = $user->getId();
-        $params['fields'] = array('id', 'text', 'from', 'to');
+        $withUser = $userMM->find($with);
+        if (!$withUser) {
+            throw new \Exception("Opponent not found", Validation::USER_NOT_FOUND);
+        }
 
         if ($req->params->has('page')) {
             $params['page'] = $req->params->get('page');
@@ -64,8 +65,8 @@ class MessageController extends Controller implements ISignedController
             $params['size'] = $req->params->get('size');
         }
         $params['with'] = array($with, $user->getId());
-        $list = $mrepo->dialog($params);
-        return $list;
+        $params['type'] = $msgMM::WIDGET_DIALOG;
+        return $msgMM->widget($params);
     }
 
     public function postAction(Request $req, $to)
@@ -75,10 +76,17 @@ class MessageController extends Controller implements ISignedController
         $val->valParams($req, array(
             'required' => array('text')
         ));
-        /** @var UserRepository $urepo */
-        $urepo = $this->get('doctrine')->getRepository('OMAPIBundle:User');
+        /** @var MessageModelManager $msgMM */
+        $msgMM = $this->get('omapi.message_model_manager');
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+
         /** @var User $toUser */
-        $toUser = $urepo->find($to);
+        $toUser = $userMM->find($to);
+
+        if (!$toUser) {
+            throw new \Exception("Opponent not found", Validation::USER_NOT_FOUND);
+        }
 
         $msg = new Message();
         $msg->setText($req->params->get('text'));
@@ -86,11 +94,7 @@ class MessageController extends Controller implements ISignedController
         $msg->setToUser($toUser);
         $msg->setCreated(time());
 
-        /** @var EntityManager $em */
-        $em = $this->get('doctrine')->getManager();
-        $em->persist($msg);
-        $em->flush();
-
+        $msgMM->save($msg);
         return "Message posted";
     }
 }

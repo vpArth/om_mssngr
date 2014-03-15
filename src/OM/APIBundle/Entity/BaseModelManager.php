@@ -187,8 +187,9 @@ abstract class BaseModelManager
         } else {
             $model = $this->findBy(array('id' => $id));
         }
-
-        $this->cacheModelSave($model);
+        if ($model) {
+            $this->cacheModelSave($model);
+        }
 
         return $model;
     }

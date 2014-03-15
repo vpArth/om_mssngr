@@ -22,7 +22,7 @@ omapi_user_profile:
     defaults: { _controller: OMAPIBundle:User:profile }
     methods: [ GET ]
     requirements:
-      id: \d+
+      id: \d{1,30}
 
 omapi_user_options_modify:
     pattern:  /user
@@ -39,13 +39,13 @@ omapi_message_dialog:
     methods: [ GET ]
     defaults: { _controller: OMAPIBundle:Message:dialog }
     requirements:
-      with: \d+
+      with: \d{1,30}
 
 omapi_message_write:
     pattern: /messages/{to}
     methods: [ POST ]
     defaults: { _controller: OMAPIBundle:Message:post }
     requirements:
-      to: \d+
+      to: \d{1,30}
 
 

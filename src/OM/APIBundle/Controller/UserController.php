@@ -2,21 +2,17 @@
 
 namespace OM\APIBundle\Controller;
 
-use Doctrine\ORM\EntityManager;
 use OM\APIBundle\Entity\UserModelManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use OM\APIBundle\Helper\Request;
 use OM\APIBundle\Helper\Validation;
-use OM\APIBundle\Entity\User;
-use OM\APIBundle\Entity\UserRepository;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 class UserController extends Controller implements ISignedController
 {
     public function userListAction(Request $req)
     {
-        /** @var User $user */
-        $user = AuthController::authorize($req, $this);
+        AuthController::authorize($req, $this);
 
         /** @var UserModelManager $userMM */
         $userMM = $this->get('omapi.user_model_manager');
@@ -34,7 +30,7 @@ class UserController extends Controller implements ISignedController
 
     public function profileAction(Request $req, $id)
     {
-        $user = AuthController::authorize($req, $this);
+        AuthController::authorize($req, $this);
         /** @var UserModelManager $userMM */
         $userMM = $this->get('omapi.user_model_manager');
         return $userMM->getPublicProfile($id);
@@ -43,6 +39,10 @@ class UserController extends Controller implements ISignedController
     public function updateAction(Request $req)
     {
         $user = AuthController::authorize($req, $this);
+
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+
         $isUpdate = false;
         if ($req->params->has('username')) {
             $username = $req->params->get('username');
@@ -67,10 +67,7 @@ class UserController extends Controller implements ISignedController
             if ($errors) {
                 throw new \Exception($errors, Validation::UNIQUE_FAILED);
             }
-            /** @var EntityManager $em */
-            $em = $this->get('doctrine')->getManager();
-            $em->persist($user);
-            $em->flush();
+            $userMM->save($user);
             return "User updated successfully";
         }
         return "Nothing updated";
