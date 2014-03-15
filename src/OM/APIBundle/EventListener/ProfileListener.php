@@ -55,12 +55,15 @@ class ProfileListener
     {
         $request = $event->getRequest();
         $response = $event->getResponse();
-        $content = json_decode($response->getContent(), 1);
-        $content['db_count'] = count($this->logger->queries);
-        $content['db_queries'] = $this->logger->queries;
-        $content['time'] = microtime(1) - $this->start;
-        $response->setContent(json_encode($content));
-        $event->setResponse($response);
+
+        if ($request->getContentType() === 'application/json') {
+            $content = json_decode($response->getContent(), 1);
+            $content['db_count'] = count($this->logger->queries);
+            $content['db_queries'] = $this->logger->queries;
+            $content['time'] = microtime(1) - $this->start;
+            $response->setContent(json_encode($content));
+            $event->setResponse($response);
+        }
     }
 
     public function onFinishRequest(Event\FinishRequestEvent $event)

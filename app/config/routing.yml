@@ -1,6 +1,6 @@
 om_client:
     resource: "@OMClientBundle/Resources/config/routing.yml"
-    prefix:   /
+    prefix:   /client/
 
 omapi:
     resource: "@OMAPIBundle/Resources/config/routing.yml"
