@@ -12,6 +12,11 @@ omapi_auth_login:
     defaults: { _controller: OMAPIBundle:Auth:login }
     methods: [ GET ]
 
+omapi_auth_logout:
+    pattern:  /logout
+    defaults: { _controller: OMAPIBundle:Auth:logout }
+    methods: [ GET ]
+
 omapi_user_list:
     pattern:  /users
     defaults: { _controller: OMAPIBundle:User:userList }

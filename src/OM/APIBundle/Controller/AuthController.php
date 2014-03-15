@@ -47,9 +47,12 @@ class AuthController extends Controller implements ISignedController
     public function okAction(Request $req)
     {
         if ($token = $req->params->get('token')) {
-            AuthController::authorize($req, $this);
+            $user = AuthController::authorize($req, $this);
+            if ($user) {
+                return "okay";
+            }
         }
-        return "okay";
+        throw new \Exception("Token expired or invalid", Validation::NOT_AUTHORIZED);
     }
 
     public function registerAction(Request $req)

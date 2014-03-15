@@ -39,7 +39,8 @@ class ExceptionListener
             $response->setStatusCode($exception->getStatusCode());
             $response->headers->replace($exception->getHeaders());
         } else {
-            $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response->headers->set('X-Status-Code', Response::HTTP_OK);
+            $response->setStatusCode(Response::HTTP_OK);
         }
 
         $response->headers->set('Content-Type', 'application/json');
