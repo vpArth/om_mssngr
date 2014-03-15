@@ -2,13 +2,13 @@
 
 namespace OM\APIBundle\Controller;
 
+use OM\APIBundle\Entity\UserModelManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 use OM\APIBundle\Helper\Request;
 use OM\APIBundle\Helper\Validation;
 use OM\APIBundle\Entity\User;
-use OM\APIBundle\Entity\UserRepository;
 
 use Doctrine\Common\Cache\Cache;
 
@@ -29,12 +29,12 @@ class AuthController extends Controller implements ISignedController
             $key = "authToken:" . $token;
             if ($cache->contains($key)) {
                 $userId= $cache->fetch($key);
-                /** @var UserRepository $repo */
-                $repo = $ctrlr->getDoctrine()->getRepository('OMAPIBundle:User');
+                /** @var UserModelManager $userMM */
+                $userMM = $ctrlr->get('omapi.user_model_manager');
                 /** @var User $user */
-                if (($user = $repo->find($userId)) && $user->getIsActive()) {
+                if (($user = $userMM->find($userId))) {
                     if ($update) {
-                        $repo->updateLastLogin($user);
+                        $userMM->updateOnline($user);
                     }
                     return $user;
                 }
@@ -47,8 +47,7 @@ class AuthController extends Controller implements ISignedController
     public function okAction(Request $req)
     {
         if ($token = $req->params->get('token')) {
-            $user = AuthController::authorize($req, $this);
-            return "Hello, " . $user->getUsername();
+            AuthController::authorize($req, $this);
         }
         return "okay";
     }
@@ -61,7 +60,11 @@ class AuthController extends Controller implements ISignedController
             'email' => array('email')
         ));
 
-        $user = new User();
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+        /** @var User $user */
+        $user = $userMM->create();
+
         /** @var EncoderFactoryInterface $factory */
         $factory = $this->get('security.encoder_factory');
         $encoder = $factory->getEncoder($user);
@@ -76,10 +79,7 @@ class AuthController extends Controller implements ISignedController
         if ($errors) {
             throw new \Exception($errors, Validation::UNIQUE_FAILED);
         }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($user);
-        $em->flush();
+        $userMM->save($user);
         return "User registered successfully";
     }
 
@@ -90,11 +90,11 @@ class AuthController extends Controller implements ISignedController
             'required' => array('username', 'password')
         ));
 
-        /** @var UserRepository $repo */
-        $repo = $this->getDoctrine()->getRepository('OMAPIBundle:User');
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+
         /** @var User $user */
-        $user = $repo->findOneBy(array('username' => $req->params->get('username')));
-        if (!$user) {
+        if (!($user = $userMM->findBy(array('username' => $req->params->get('username'))))) {
             throw new \Exception("User not found", Validation::USER_NOT_FOUND);
         }
         /** @var EncoderFactoryInterface $factory */
@@ -107,14 +107,22 @@ class AuthController extends Controller implements ISignedController
         )) {
             throw new \Exception("Bad credentials", Validation::BAD_CREDENTIALS);
         }
-        /** @var Cache $cache */
-        $cache = $this->get('aequasi_cache.instance.default');
-        $token = uniqid();
-        $key = "authToken:" . $token;
-        $cache->save($key, $user->getId(), 24*3600);
-        $repo->updateLastLogin($user);
+
+        $token = $userMM->login($user);
         return array(
             "token" => $token
         );
+    }
+
+    public function logoutAction()
+    {
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+
+        $token = $req->params->has('token') ? $req->params->get('token') : false;
+        if ($token) {
+            $userMM->logout($token);
+        }
+        return "ok";
     }
 }

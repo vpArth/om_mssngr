@@ -3,8 +3,8 @@
 namespace OM\APIBundle\Controller;
 
 use Doctrine\ORM\EntityManager;
+use OM\APIBundle\Entity\UserModelManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Response;
 use OM\APIBundle\Helper\Request;
 use OM\APIBundle\Helper\Validation;
 use OM\APIBundle\Entity\User;
@@ -13,20 +13,15 @@ use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
 class UserController extends Controller implements ISignedController
 {
-    public function okAction(Request $req)
-    {
-        return "ok";
-    }
-
     public function userListAction(Request $req)
     {
         /** @var User $user */
         $user = AuthController::authorize($req, $this);
 
-        /** @var UserRepository $repo */
-        $repo = $this->get('doctrine')->getRepository('OMAPIBundle:User');
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
         $params = array();
-        $params['exclude_id'] = $user->getId();
+        $params['type'] = $userMM::WIDGET_ALL;
         $params['fields'] = array('id', 'username', 'lastLogin');
         if ($req->params->has('page')) {
             $params['page'] = $req->params->get('page');
@@ -34,25 +29,15 @@ class UserController extends Controller implements ISignedController
         if ($req->params->has('size')) {
             $params['size'] = $req->params->get('size');
         }
-        $list = $repo->userList($params);
-        return $list;
+        return $userMM->widget($params);
     }
 
     public function profileAction(Request $req, $id)
     {
         $user = AuthController::authorize($req, $this);
-        /** @var UserRepository $repo */
-        $repo = $this->get('doctrine')->getRepository('OMAPIBundle:User');
-        $repo->updateLastLogin($user);
-        $profile = $repo->getProfile($id, array(
-            'self' => $user,
-            'fields' => array('id', 'username', 'email', 'lastLogin')
-        ));
-        if (!$profile) {
-            throw new \Exception("Requested user inactive or not exists", Validation::USER_NOT_FOUND);
-        }
-
-        return $profile;
+        /** @var UserModelManager $userMM */
+        $userMM = $this->get('omapi.user_model_manager');
+        return $userMM->getPublicProfile($id);
     }
 
     public function updateAction(Request $req)

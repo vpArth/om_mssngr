@@ -2,6 +2,7 @@
 
 namespace OM\APIBundle\Controller;
 
+use OM\APIBundle\Entity\MessageModelManager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 
@@ -28,21 +29,21 @@ class MessageController extends Controller implements ISignedController
         /** @var User $user */
         $user = AuthController::authorize($req, $this);
 
-        /** @var MessageRepository $mrepo */
-        $mrepo = $this->get('doctrine')->getRepository('OMAPIBundle:Message');
-
+        /** @var MessageModelManager $msgMM */
+        $msgMM = $this->get('omapi.message_model_manager');
         $params = array();
-        $params['exclude_id'] = $user->getId();
-        $params['fields'] = array('id', 'text', 'from', 'to');
-
+        $params['type'] = $msgMM::WIDGET_ALL;
+        $params['fields'] = array('id', 'username', 'lastLogin');
         if ($req->params->has('page')) {
             $params['page'] = $req->params->get('page');
         }
         if ($req->params->has('size')) {
             $params['size'] = $req->params->get('size');
         }
-        $list = $mrepo->msgList($params);
-        return $list;
+        if ($req->params->has('textLength')) {
+            $params['textLength'] = $req->params->get('textLength');
+        }
+        return $msgMM->widget($params);
     }
     public function dialogAction(Request $req, $with)
     {
@@ -76,6 +77,7 @@ class MessageController extends Controller implements ISignedController
         ));
         /** @var UserRepository $urepo */
         $urepo = $this->get('doctrine')->getRepository('OMAPIBundle:User');
+        /** @var User $toUser */
         $toUser = $urepo->find($to);
 
         $msg = new Message();

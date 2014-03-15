@@ -48,15 +48,15 @@ class MessageRepository extends EntityRepository
 
         $dql =
             "SELECT m FROM OM\\APIBundle\\Entity\\Message m
-            JOIN m.fromUser f
-            JOIN m.toUser t";
+            LEFT JOIN m.fromUser f
+            LEFT JOIN m.toUser t";
         $query = $this->_em->createQuery($dql)
             ->setFirstResult($page * $size)
             ->setMaxResults($size);
 
         $paginator = new Paginator($query, $fetchJoinCollection = false);
 
-        return $this->formatList($paginator, count($paginator));
+        return $this->formatList($paginator);
     }
 
     public function dialog($params)
@@ -77,6 +77,6 @@ class MessageRepository extends EntityRepository
 
         $paginator = new Paginator($query, $fetchJoinCollection = false);
 
-        return $this->formatList($paginator, count($paginator));
+        return $this->formatList($paginator);
     }
 }

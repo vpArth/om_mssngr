@@ -3,6 +3,7 @@
 namespace OM\APIBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
+use OM\APIBundle\Helper\Paginator;
 
 /**
  * UserRepository
@@ -32,30 +33,41 @@ END online";
         return "1";
     }
 
-    public function userList($params)
+    protected function formatList(Paginator $paginator, $params = array())
     {
-        $qb = $this->createQueryBuilder('u');
-        $page = isset($params['page']) ? $params['page'] : 0;
-        $size = isset($params['size']) ? $params['size'] : 5;
-        $select = array();
-        if (isset($params['fields'])) {
-            foreach ($params['fields'] as $field) {
-                $select[] = "u.{$field}";
+        $rows = array();
+        /** @var User $row */
+        foreach ($paginator as $row) {
+            $values = $row->getValues();
+            if (isset($params['fields'])) {
+                $r = array();
+                foreach ($params['fields'] as $f) {
+                    $r[$f] = $values[$f];
+                }
+                $rows[] = $r;
+            } else {
+                $rows[] = $values;
             }
         }
-//        $select[] = self::getField("online", 600);
-        if ($select) {
-            $qb->select($select);
-        }
-        if ($params['exclude_id']) {
-            $qb->where('u.id != :id')
-                ->setParameter('id', $params['exclude_id']);
-        }
-        $qb->setFirstResult($page*$size)
-           ->setMaxResults($size);
+        return array(
+            'rows' => $rows,
+            'count' => count($paginator)
+        );
+    }
 
-        return $qb->getQuery()
-            ->getResult();
+    public function userList($params)
+    {
+        $page = isset($params['page']) ? $params['page'] : 0;
+        $size = isset($params['size']) ? $params['size'] : 5;
+
+        $dql = "SELECT m FROM OM\\APIBundle\\Entity\\User m";
+        $query = $this->getEntityManager()->createQuery($dql)
+            ->setFirstResult($page * $size)
+            ->setMaxResults($size);
+
+        $paginator = new Paginator($query, $fetchJoinCollection = false);
+
+        return $this->formatList($paginator, $params);
     }
 
     public function getProfile($id, $params)
@@ -73,13 +85,5 @@ END online";
         $qb->where('u.id = :id AND u.isActive = 1')
             ->setParameter('id', $id);
         return $qb->getQuery()->getOneOrNullResult();
-    }
-
-    public function updateLastLogin(User $user)
-    {
-        $user->setLastLogin(time());
-        $this->_em->persist($user);
-        $this->_em->flush();
-        return $this;
     }
 }
