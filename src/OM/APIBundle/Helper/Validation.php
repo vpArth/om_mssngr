@@ -14,6 +14,10 @@ class Validation
 {
     const INVALID_PARAMS = 22004;
     const UNIQUE_FAILED  = 22005;
+    const NOT_AUTHORIZED = 21001;
+    const BAD_TOKEN = 21002;
+    const BAD_CREDENTIALS = 21003;
+    const USER_NOT_FOUND = 21004;
 
     private $validator;
 
@@ -110,5 +114,13 @@ class Validation
             }
         }
         return 0;
+    }
+
+    public function valParams(Request $req, array $rules)
+    {
+        $errors = $this->validate($req, $rules);
+        if ($errors) {
+            throw new \Exception($errors, Validation::INVALID_PARAMS);
+        }
     }
 }

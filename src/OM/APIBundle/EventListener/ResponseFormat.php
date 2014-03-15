@@ -19,7 +19,8 @@ class ResponseFormat
     private function jsonFormat($data)
     {
         $response = new Response();
-        $response->setContent(json_encode($data));
+        $data = json_encode($data);
+        $response->setContent($data);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
@@ -37,11 +38,8 @@ class ResponseFormat
     {
         $request = $event->getRequest();
         $result = $event->getControllerResult();
-        $content = array();
-        $content['result'] = $result;
+        $content = $result;
         $content['status'] = self::STATUS_SUCCESS;
-        // $content['timestamp'] = time();
-        $content['time'] = microtime(1) - $request->startTime;
         $event->setResponse($this->format($content));
     }
 }

@@ -14,18 +14,14 @@ use Doctrine\Common\Cache\Cache;
 
 class AuthController extends Controller implements ISignedController
 {
-    const NOT_AUTHORIZED = 21001;
-    const BAD_TOKEN = 21002;
-    const BAD_CREDENTIALS = 21003;
-    const USER_NOT_FOUND = 21004;
-
     /**
      * @param Request $req
      * @param Controller $ctrlr
+     * @param bool $update
      * @throws \Exception
      * @return User
      */
-    public static function authorize(Request $req, Controller $ctrlr)
+    public static function authorize(Request $req, Controller $ctrlr, $update = true)
     {
         if ($token = $req->params->get('token')) {
             /** @var Cache $cache */
@@ -33,15 +29,19 @@ class AuthController extends Controller implements ISignedController
             $key = "authToken:" . $token;
             if ($cache->contains($key)) {
                 $userId= $cache->fetch($key);
+                /** @var UserRepository $repo */
                 $repo = $ctrlr->getDoctrine()->getRepository('OMAPIBundle:User');
                 /** @var User $user */
                 if (($user = $repo->find($userId)) && $user->getIsActive()) {
+                    if ($update) {
+                        $repo->updateLastLogin($user);
+                    }
                     return $user;
                 }
             }
-            throw new \Exception("Wrong or expired token", self::BAD_TOKEN);
+            throw new \Exception("Wrong or expired token", Validation::BAD_TOKEN);
         }
-        throw new \Exception("Not authorized", self::NOT_AUTHORIZED);
+        throw new \Exception("Not authorized", Validation::NOT_AUTHORIZED);
     }
 
     public function okAction(Request $req)
@@ -56,13 +56,10 @@ class AuthController extends Controller implements ISignedController
     public function registerAction(Request $req)
     {
         $val = new Validation($this->get('validator'));
-        $errors = $val->validate($req, array(
+        $val->valParams($req, array(
            'required' => array('username', 'email', 'password'),
             'email' => array('email')
         ));
-        if ($errors) {
-            throw new \Exception($errors, Validation::INVALID_PARAMS);
-        }
 
         $user = new User();
         /** @var EncoderFactoryInterface $factory */
@@ -89,18 +86,16 @@ class AuthController extends Controller implements ISignedController
     public function loginAction(Request $req)
     {
         $val = new Validation($this->get('validator'));
-        $errors = $val->validate($req, array(
+        $val->valParams($req, array(
             'required' => array('username', 'password')
         ));
-        if ($errors) {
-            throw new \Exception($errors, Validation::INVALID_PARAMS);
-        }
+
         /** @var UserRepository $repo */
         $repo = $this->getDoctrine()->getRepository('OMAPIBundle:User');
         /** @var User $user */
         $user = $repo->findOneBy(array('username' => $req->params->get('username')));
         if (!$user) {
-            throw new \Exception("User not found", self::USER_NOT_FOUND);
+            throw new \Exception("User not found", Validation::USER_NOT_FOUND);
         }
         /** @var EncoderFactoryInterface $factory */
         $factory = $this->get('security.encoder_factory');
@@ -110,7 +105,7 @@ class AuthController extends Controller implements ISignedController
             $req->params->get('password'),
             $user->getSalt()
         )) {
-            throw new \Exception("Bad credentials", self::BAD_CREDENTIALS);
+            throw new \Exception("Bad credentials", Validation::BAD_CREDENTIALS);
         }
         /** @var Cache $cache */
         $cache = $this->get('aequasi_cache.instance.default');
@@ -121,75 +116,5 @@ class AuthController extends Controller implements ISignedController
         return array(
             "token" => $token
         );
-    }
-
-    public function userListAction(Request $req)
-    {
-        /** @var User $user */
-        $user = AuthController::authorize($req, $this);
-        /** @var UserRepository $repo */
-        $repo = $this->getDoctrine()->getRepository('OMAPIBundle:User');
-        $params = array();
-        $params['exclude_id'] = $user->getId();
-        $params['fields'] = array('id', 'username', 'lastLogin');
-        if ($req->params->has('page')) {
-            $params['page'] = $req->params->get('page');
-        }
-        if ($req->params->has('size')) {
-            $params['size'] = $req->params->get('size');
-        }
-        $list = $repo->userList($params);
-        return $list;
-    }
-
-    public function profileAction(Request $req, $id)
-    {
-        $user = AuthController::authorize($req, $this);
-        /** @var UserRepository $repo */
-        $repo = $this->getDoctrine()->getRepository('OMAPIBundle:User');
-        $profile = $repo->getProfile($id, array(
-            'self' => $user,
-            'fields' => array('id', 'username', 'email', 'lastLogin')
-        ));
-        if (!$profile) {
-            throw new \Exception("Requested user inactive or not exists", self::USER_NOT_FOUND);
-        }
-        return $profile;
-    }
-
-    public function updateAction(Request $req)
-    {
-        $user = AuthController::authorize($req, $this);
-        $isUpdate = false;
-        if ($req->params->has('username')) {
-            $username = $req->params->get('username');
-            $isUpdate |= ($username != $user->getUsername());
-            $user->setUsername($username);
-        }
-        if ($req->params->has('email')) {
-            $email = $req->params->get('email');
-            $isUpdate |= $email != $user->getEmail();
-            $user->setUsername($email);
-        }
-        if ($req->params->has('password')) {
-            $isUpdate = true;
-            /** @var EncoderFactoryInterface $factory */
-            $factory = $this->get('security.encoder_factory');
-            $encoder = $factory->getEncoder($user);
-            $user->setPassword($encoder->encodePassword($req->params->get('password'), $user->getSalt()));
-        }
-        if ($isUpdate) {
-            $val = new Validation($this->get('validator'));
-            $errors = $val->checkUniques($user, array('username', 'email'));
-            if ($errors) {
-                throw new \Exception($errors, Validation::UNIQUE_FAILED);
-            }
-
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($user);
-            $em->flush();
-            return "User updated successfully";
-        }
-        return "Nothing updated";
     }
 }

@@ -43,8 +43,10 @@ END online";
                 $select[] = "u.{$field}";
             }
         }
-        $select[] = self::getField("online", 600);
-        $qb->select($select);
+//        $select[] = self::getField("online", 600);
+        if ($select) {
+            $qb->select($select);
+        }
         if ($params['exclude_id']) {
             $qb->where('u.id != :id')
                 ->setParameter('id', $params['exclude_id']);
@@ -65,7 +67,7 @@ END online";
                 $select[] = "u.{$field}";
             }
         }
-        $select[] = self::getField("online", 600);
+//        $select[] = self::getField("online", 600);
         $select[] = self::getField("messages");
         $qb->select($select);
         $qb->where('u.id = :id AND u.isActive = 1')

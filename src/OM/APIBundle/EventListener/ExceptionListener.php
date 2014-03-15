@@ -30,8 +30,6 @@ class ExceptionListener
             array(
                 'status' => $exception->getCode() ?: -1,
                 'message' => $exception->getMessage(),
-                // 'timestamp' => time(),
-                'time' => microtime(1) - $request->startTime
             )
         );
 

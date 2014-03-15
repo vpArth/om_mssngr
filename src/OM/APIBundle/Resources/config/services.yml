@@ -10,6 +10,17 @@ parameters:
       - { host: 127.0.0.1, port: 11211 }
 
 services:
+    omapi.profiler.action_listener:
+        class: OM\APIBundle\EventListener\ProfileListener
+        arguments: [@service_container]
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onRequest }
+            - { name: kernel.event_listener, event: kernel.controller, method: onController }
+            - { name: kernel.event_listener, event: kernel.view, method: onView }
+            - { name: kernel.event_listener, event: kernel.response, method: onResponse }
+            - { name: kernel.event_listener, event: kernel.terminate, method: onTerminate }
+            - { name: kernel.event_listener, event: kernel.exception, method: onException }
+
     #signed requests and response, rely on needSign parameter
     omapi.tokens.action_listener:
         class: OM\APIBundle\EventListener\SignHandler
@@ -35,6 +46,8 @@ services:
         arguments: [ @logger ]
         tags:
             - { name: kernel.event_listener, event: kernel.exception, method: onException }
+
+
     memcached:
         class: Doctrine\Common\Cache\MemcacheCache
         calls:

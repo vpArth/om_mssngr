@@ -3,6 +3,8 @@
 namespace OM\APIBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -30,9 +32,9 @@ class User implements UserInterface, \Serializable
      */
     private $password;
     /**
-     * @ORM\Column(type="string", length=64)
+     * @ORM\Column(type="string", length=64, nullable=true)
      */
-    private $salt;
+    private $salt = null;
 
     /**
      * @ORM\Column(type="string", length=60, unique=true)
@@ -49,9 +51,23 @@ class User implements UserInterface, \Serializable
      */
     private $lastLogin = null;
 
+    /**
+     * @var Collection
+     * @ORM\OneToMany(targetEntity="Message", mappedBy="from_id")
+     */
+    private $myMessages;
+
+    /**
+     * @var Collection
+     * @ORM\OneToMany(targetEntity="Message", mappedBy="to_id")
+     */
+    private $messagesToMe;
+
     public function __construct()
     {
         $this->isActive = true;
+        $this->myMessages= new ArrayCollection();
+        $this->messagesToMe= new ArrayCollection();
         $this->salt = "";//md5(uniqid(null, true));
     }
 
@@ -259,5 +275,71 @@ class User implements UserInterface, \Serializable
             'lastLogin' => $this->getLastLogin(),
             'isActive' => $this->getisActive()
         );
+    }
+
+    /**
+     * Add myMessages
+     *
+     * @param \OM\APIBundle\Entity\Message $myMessages
+     * @return User
+     */
+    public function addMyMessage(\OM\APIBundle\Entity\Message $myMessages)
+    {
+        $this->myMessages[] = $myMessages;
+
+        return $this;
+    }
+
+    /**
+     * Remove myMessages
+     *
+     * @param \OM\APIBundle\Entity\Message $myMessages
+     */
+    public function removeMyMessage(\OM\APIBundle\Entity\Message $myMessages)
+    {
+        $this->myMessages->removeElement($myMessages);
+    }
+
+    /**
+     * Get myMessages
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMyMessages()
+    {
+        return $this->myMessages;
+    }
+
+    /**
+     * Add messagesToMe
+     *
+     * @param \OM\APIBundle\Entity\Message $messagesToMe
+     * @return User
+     */
+    public function addMessagesToMe(\OM\APIBundle\Entity\Message $messagesToMe)
+    {
+        $this->messagesToMe[] = $messagesToMe;
+
+        return $this;
+    }
+
+    /**
+     * Remove messagesToMe
+     *
+     * @param \OM\APIBundle\Entity\Message $messagesToMe
+     */
+    public function removeMessagesToMe(\OM\APIBundle\Entity\Message $messagesToMe)
+    {
+        $this->messagesToMe->removeElement($messagesToMe);
+    }
+
+    /**
+     * Get messagesToMe
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMessagesToMe()
+    {
+        return $this->messagesToMe;
     }
 }

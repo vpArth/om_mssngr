@@ -1,4 +1,4 @@
-omapi_apiok:
+omapi_api_ok:
     pattern:  /ok
     defaults: { _controller: OMAPIBundle:Auth:ok }
 
@@ -14,18 +14,38 @@ omapi_auth_login:
 
 omapi_user_list:
     pattern:  /users
-    defaults: { _controller: OMAPIBundle:Auth:userList }
+    defaults: { _controller: OMAPIBundle:User:userList }
     methods: [ GET ]
 
 omapi_user_profile:
     pattern:  /user/{id}
-    defaults: { _controller: OMAPIBundle:Auth:profile }
+    defaults: { _controller: OMAPIBundle:User:profile }
     methods: [ GET ]
     requirements:
       id: \d+
 
 omapi_user_options_modify:
     pattern:  /user
-    defaults: { _controller: OMAPIBundle:Auth:update }
+    defaults: { _controller: OMAPIBundle:User:update }
     methods: [ PUT ]
+
+omapi_message_getlist:
+    pattern: /messages
+    methods: [ GET ]
+    defaults: { _controller: OMAPIBundle:Message:list }
+
+omapi_message_dialog:
+    pattern: /messages/{with}
+    methods: [ GET ]
+    defaults: { _controller: OMAPIBundle:Message:dialog }
+    requirements:
+      with: \d+
+
+omapi_message_write:
+    pattern: /messages/{to}
+    methods: [ POST ]
+    defaults: { _controller: OMAPIBundle:Message:post }
+    requirements:
+      to: \d+
+
 
