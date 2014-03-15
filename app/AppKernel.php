@@ -17,7 +17,8 @@ class AppKernel extends Kernel
             new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
             new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
             new OM\APIBundle\OMAPIBundle(),
-            new Aequasi\Bundle\CacheBundle\AequasiCacheBundle()
+            new Aequasi\Bundle\CacheBundle\AequasiCacheBundle(),
+            new OM\ClientBundle\OMClientBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {

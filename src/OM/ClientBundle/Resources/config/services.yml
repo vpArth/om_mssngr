@@ -1,0 +1,7 @@
+parameters:
+#    om_client.example.class: OM\ClientBundle\Example
+
+services:
+#    om_client.example:
+#        class: %om_client.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]
